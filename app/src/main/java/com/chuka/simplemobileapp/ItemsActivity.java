@@ -5,12 +5,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.chuka.simplemobileapp.data.ItemResponse;
+
+import org.joda.time.DateTime;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +28,7 @@ public class ItemsActivity extends AppCompatActivity {
 
     public  static final String EXTRA_ITEMS = "extra_items";
 
+    @BindView(R.id.toolbar) Toolbar toolbar;
     @BindView(R.id.item_list) RecyclerView itemList;
 
     @Override
@@ -32,11 +37,22 @@ public class ItemsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_items);
         ButterKnife.bind(this);
 
+        toolbar.setTitle(R.string.app_name);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         ItemResponse items = (ItemResponse) getIntent().getSerializableExtra(EXTRA_ITEMS);
 
         itemList.setLayoutManager(new LinearLayoutManager(this));
         itemList.setItemAnimator(new DefaultItemAnimator());
         itemList.setAdapter(new ItemAdapter(items));
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home)
+            finish();
+        return super.onOptionsItemSelected(item);
     }
 
     public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder> {
@@ -56,8 +72,10 @@ public class ItemsActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(ItemViewHolder holder, int position) {
-            holder.title.setText(items.get(position).getTitle());
-            holder.desc.setText(items.get(position).getDescription());
+            ItemResponse.Item item = items.get(position);
+            holder.title.setText(item.getTitle());
+            holder.desc.setText(item.getDescription());
+            holder.time.setText(DateUtils.getDurationSince(new DateTime(item.getCreatedAt())));
         }
 
         @Override
@@ -71,6 +89,7 @@ public class ItemsActivity extends AppCompatActivity {
 
             @BindView(R.id.title) TextView title;
             @BindView(R.id.desc) TextView desc;
+            @BindView(R.id.time) TextView time;
 
             public ItemViewHolder(View itemView) {
                 super(itemView);
