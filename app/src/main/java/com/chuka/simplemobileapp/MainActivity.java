@@ -5,12 +5,14 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.chuka.simplemobileapp.data.ApiInterface;
+import com.chuka.simplemobileapp.data.ItemResponse;
 import com.chuka.simplemobileapp.data.ServiceGenerator;
 
 import butterknife.BindView;
@@ -45,6 +47,12 @@ public class MainActivity extends AppCompatActivity {
                         if (url.length() == 0) {
                             Toast.makeText(MainActivity.this, "Enter a domain to continue", Toast.LENGTH_SHORT).show();
                             return;
+                        } else if (!Patterns.WEB_URL.matcher(url).matches()) {
+                            Toast.makeText(MainActivity.this, "Invalid url", Toast.LENGTH_SHORT).show();
+                            Log.e(TAG, "Doesnt match");
+                            return;
+                        } else {
+                            Log.e(TAG, "Matches");
                         }
 
                         // Fetch the items
@@ -64,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.e(TAG, "onSubscribe");
                     }
                 })
-                .subscribe(new Subscriber<Object>() {
+                .subscribe(new Subscriber<ItemResponse>() {
                     @Override
                     public void onCompleted() {
                         Log.e(TAG, "onComplete");
@@ -72,13 +80,14 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(Throwable e) {
-
+                        Toast.makeText(MainActivity.this, "Unable to retrieve data", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
-                    public void onNext(Object o) {
+                    public void onNext(ItemResponse items) {
                         // Launch list activity
                         Intent intent = new Intent(MainActivity.this, ItemsActivity.class);
+                        intent.putExtra(ItemsActivity.EXTRA_ITEMS, items);
                         startActivity(intent);
                     }
                 });

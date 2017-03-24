@@ -10,5 +10,5 @@ import rx.Observable;
 public interface ApiInterface {
 
     @GET("list")
-    Observable<Object> getList();
+    Observable<ItemResponse> getList();
 }
