@@ -55,6 +55,10 @@ public class MainActivity extends AppCompatActivity {
                             Log.e(TAG, "Matches");
                         }
 
+                        if (!url.startsWith("http://")) {
+                            url = "http://" + url;
+                        }
+
                         // Fetch the items
                         fetchItems(url);
                     }
@@ -81,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onError(Throwable e) {
                         Toast.makeText(MainActivity.this, "Unable to retrieve data", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
                     }
 
                     @Override
