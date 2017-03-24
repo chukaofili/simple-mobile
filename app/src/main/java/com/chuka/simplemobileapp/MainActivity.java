@@ -9,6 +9,7 @@ import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.chuka.simplemobileapp.data.ApiInterface;
@@ -29,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.toolbar) Toolbar toolbar;
     @BindView(R.id.domain) EditText domain;
     @BindView(R.id.next) Button nextBtn;
+    @BindView(R.id.progress) ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +57,10 @@ public class MainActivity extends AppCompatActivity {
                             Log.e(TAG, "Matches");
                         }
 
+                        if (!url.startsWith("http://")) {
+                            url = "http://" + url;
+                        }
+
                         // Fetch the items
                         fetchItems(url);
                     }
@@ -69,18 +75,20 @@ public class MainActivity extends AppCompatActivity {
                 .doOnSubscribe(new Action0() {
                     @Override
                     public void call() {
-                        Log.e(TAG, "onSubscribe");
+                        progressBar.setVisibility(View.VISIBLE);
                     }
                 })
                 .subscribe(new Subscriber<ItemResponse>() {
                     @Override
                     public void onCompleted() {
-                        Log.e(TAG, "onComplete");
+                        progressBar.setVisibility(View.GONE);
                     }
 
                     @Override
                     public void onError(Throwable e) {
                         Toast.makeText(MainActivity.this, "Unable to retrieve data", Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(View.GONE);
+                        e.printStackTrace();
                     }
 
                     @Override
