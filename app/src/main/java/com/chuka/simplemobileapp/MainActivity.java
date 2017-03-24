@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
                             Log.e(TAG, "Matches");
                         }
 
-                        if (!url.startsWith("http://")) {
+                        if (!url.startsWith("http://") && !url.startsWith("https://")) {
                             url = "http://" + url;
                         }
 

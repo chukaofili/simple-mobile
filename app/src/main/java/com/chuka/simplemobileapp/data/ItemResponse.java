@@ -16,7 +16,7 @@ public class ItemResponse implements Serializable {
     @Expose
     private String message;
 
-    @SerializedName("items")
+    @SerializedName("data")
     @Expose
     private List<Item> items = null;
 
@@ -36,11 +36,11 @@ public class ItemResponse implements Serializable {
         this.items = items;
     }
 
-    public class Item {
+    public class Item implements Serializable{
 
         @SerializedName("id")
         @Expose
-        private Integer id;
+        private String id;
 
         @SerializedName("title")
         @Expose
@@ -48,14 +48,17 @@ public class ItemResponse implements Serializable {
 
         @SerializedName("description")
         @Expose
-
         private String description;
 
-        public Integer getId() {
+        @SerializedName("createdAt")
+        @Expose
+        private String createdAt;
+
+        public String getId() {
             return id;
         }
 
-        public void setId(Integer id) {
+        public void setId(String id) {
             this.id = id;
         }
 
@@ -75,5 +78,12 @@ public class ItemResponse implements Serializable {
             this.description = description;
         }
 
+        public String getCreatedAt() {
+            return createdAt;
+        }
+
+        public void setCreatedAt(String createdAt) {
+            this.createdAt = createdAt;
+        }
     }
 }

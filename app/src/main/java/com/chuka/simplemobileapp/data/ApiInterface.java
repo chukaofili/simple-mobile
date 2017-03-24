@@ -9,6 +9,6 @@ import rx.Observable;
 
 public interface ApiInterface {
 
-    @GET("list")
+    @GET("item")
     Observable<ItemResponse> getList();
 }
