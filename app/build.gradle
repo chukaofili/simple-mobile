@@ -1,7 +1,54 @@
+buildscript {
+    repositories {
+        maven { url 'https://maven.fabric.io/public' }
+    }
+
+    dependencies {
+        classpath 'io.fabric.tools:gradle:1.+'
+    }
+}
 apply plugin: 'com.android.application'
 apply plugin: 'com.neenbedankt.android-apt'
+apply plugin: 'io.fabric'
+
+repositories {
+    maven { url 'https://maven.fabric.io/public' }
+}
+
 apply plugin: 'realm-android'
 apply plugin: 'me.tatarka.retrolambda'
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('keys.properties')
+def fabricKeyStoreFile = rootProject.file('fabric.properties')
+
+if (keystorePropertiesFile.exists()) {
+    println 'KeyFile Exists'
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+} else {
+    // Load keystore properties from environment or set their default values
+    def env = System.getenv()
+    if (env['SIMPLE_KEYSTORE_ALIAS']) keystoreProperties.put('keyAlias', env['SIMPLE_KEYSTORE_ALIAS'])
+    else keystoreProperties.put('keyAlias', "SimpleAndroid")
+    if (env['SIMPLE_KEYSTORE_KEY_PASS']) keystoreProperties.put('keyPassword', env['SIMPLE_KEYSTORE_KEY_PASS'])
+    else keystoreProperties.put('keyPassword', "simpleandroid")
+    if (env['SIMPLE_KEYSTORE_HOME']) keystoreProperties.put('storeFile', env['SIMPLE_KEYSTORE_HOME'])
+    else keystoreProperties.put('storeFile', "${project.projectDir.absolutePath}/keystore.jks")
+    if (env['SIMPLE_KEYSTORE_STORE_PASS']) keystoreProperties.put('storePassword', env['SIMPLE_KEYSTORE_STORE_PASS'])
+    else keystoreProperties.put('storePassword', "simpleandroid")
+    if (env['FABRIC_KEY']) keystoreProperties.put('fabric_api_key', env['FABRIC_KEY'])
+    else keystoreProperties.put('fabric_api_key', "myDefCrashlyticsApiKey")
+    if (env['FABRIC_SECRET']) keystoreProperties.put('fabric_apiSecret', env['FABRIC_SECRET'])
+    else keystoreProperties.put('fabric_apiSecret', "myDefCrashlyticsApiKey")
+}
+
+if (!fabricKeyStoreFile.exists()) {
+    fabricKeyStoreFile = new File("${project.projectDir.absolutePath}/fabric.properties")
+    Properties properties = new Properties()
+    properties.put("apiSecret", keystoreProperties['fabric_apiSecret'])
+    properties.put("apiKey", keystoreProperties['fabric_api_key'])
+    properties.store(new FileWriter(fabricKeyStoreFile), "")
+}
 
 android {
     compileSdkVersion 25
@@ -14,9 +61,58 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
+    /**
+     * This is for jenkins only. Always comment out if not Jenkins.
+     * */
+    lintOptions {
+        abortOnError false
+    }
+
+    signingConfigs {
+        debug {
+            print(file(keystoreProperties['storeFile']))
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
+
+        release {
+            print(file(keystoreProperties['storeFile']))
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            multiDexEnabled true
+            signingConfig signingConfigs.release
+            manifestPlaceholders = [crashlyticsApiKey: keystoreProperties['fabric_api_key']]
+            ext.betaDistributionReleaseNotes="-- First live build"
+            ext.betaDistributionGroupAliases="Simple-Testers"
+            ext.betaDistributionNotifications=true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        debug {
+            applicationIdSuffix ".dev"
+            versionNameSuffix "-dev"
+            minifyEnabled false
+            multiDexEnabled true
+            signingConfig signingConfigs.debug
+            manifestPlaceholders = [crashlyticsApiKey: keystoreProperties['fabric_api_key']]
+            ext.betaDistributionReleaseNotes="-- First debug build"
+            ext.betaDistributionGroupAliases="Simple-Testers"
+            ext.betaDistributionNotifications=true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -29,18 +125,10 @@ dependencies {
     })
 
     // Retrofit
-    compile 'com.android.support:appcompat-v7:25.2.0'
-    compile 'com.android.support:design:25.2.0'
-    compile 'com.android.support:support-v4:25.2.0'
-    compile 'com.android.support:cardview-v7:25.2.0'
-
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
-
-    compile 'com.android.support:appcompat-v7:25.2.0'
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
-    compile 'com.android.support:design:25.2.0'
-    compile 'com.android.support:support-v4:25.2.0'
-    compile 'com.android.support:cardview-v7:25.2.0'
+    compile 'com.android.support:appcompat-v7:25.3.0'
+    compile 'com.android.support:design:25.3.0'
+    compile 'com.android.support:support-v4:25.3.0'
+    compile 'com.android.support:cardview-v7:25.3.0'
 
     compile 'com.jakewharton:butterknife:8.2.1'
     apt 'com.jakewharton:butterknife-compiler:8.2.1'
@@ -60,4 +148,7 @@ dependencies {
     compile 'com.squareup.okhttp3:okhttp:3.4.1'
 
     testCompile 'junit:junit:4.12'
+    compile('com.crashlytics.sdk.android:crashlytics:2.6.7@aar') {
+        transitive = true;
+    }
 }
